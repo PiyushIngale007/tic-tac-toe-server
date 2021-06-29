@@ -8,7 +8,6 @@ const io = require("socket.io")(4000 , {
 let roomid = []
 
 
-
 io.on("connection" , (client) => {
     const room_id = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)
     console.log(client.id)
@@ -19,7 +18,7 @@ io.on("connection" , (client) => {
     client.on("join-game", (id) => {
         console.log(id);
         client.join(id)
-        var valid = null
+        let valid = null
         console.log(roomid);
         if (roomid.includes(id)) {
             valid = true
