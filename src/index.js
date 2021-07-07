@@ -1,4 +1,4 @@
-const io = require("socket.io")(4000, {
+const io = require("socket.io")(5000, {
   cors: {
     origin: ["http://localhost:3000"],
   },
@@ -45,6 +45,8 @@ io.on("connection", (client) => {
       Player2Piece: Player2Piece,
       player1Array: [],
       player2Array: [],
+      Player1Score: 0,
+      Player2Score: 0,
     });
   });
 
@@ -87,9 +89,21 @@ io.on("connection", (client) => {
     console.log(p1, p2, details.player1Array, details.player2Array);
     if (p1) {
       console.log("Player 1 Winner");
+      details.Player1Score++;
+      io.in(details.RoomId).emit(
+        "scoreUpdate",
+        details.Player1Score,
+        details.Player2Score
+      );
       io.in(details.RoomId).emit("result", details.Player1);
     } else if (p2) {
       console.log("Player 2 Winner");
+      details.Player2Score++;
+      io.in(details.RoomId).emit(
+        "scoreUpdate",
+        details.Player1Score,
+        details.Player2Score
+      );
       io.in(details.RoomId).emit("result", details.Player2);
     } else if (
       details.player1Array.length + details.player2Array.length ===
@@ -105,6 +119,16 @@ io.on("connection", (client) => {
     console.log(testvalue);
     console.log(room);
     client.to(room).emit("testvalue", testvalue);
+  });
+
+  client.on("playAgain", (details) => {
+    // const Player1Piece = Math.random() > 0.5 ? "X" : "O";
+    // const Player2Piece = Player1Piece === "X" ? "O" : "X";
+
+    // details.Player1Piece = Player1Piece;
+    // details.Player2Piece = Player2Piece;
+
+    client.to(details.RoomId).emit("playAgain");
   });
 
   client.on("disconnecting1", (id) => {
