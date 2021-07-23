@@ -1,8 +1,8 @@
-const PORT = 5000 || process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 const io = require('socket.io')(PORT, {
   cors: {
-    origin: ['http://locolhost:3000'],
+    origin: '*',
   },
 });
 // const express = require("express");
