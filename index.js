@@ -1,8 +1,8 @@
-const PORT = 5000 || process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
-const io = require("socket.io")(PORT, {
+const io = require('socket.io')(PORT, {
   cors: {
-    origin: "*",
+    origin: '*',
   },
 });
 // const express = require("express");
@@ -28,16 +28,16 @@ const checkWinner = (playerArray) => {
   });
 };
 
-io.on("connection", (client) => {
+io.on('connection', (client) => {
   const room_id = Math.random()
     .toString(36)
-    .replace(/[^a-z]+/g, "")
+    .replace(/[^a-z]+/g, '')
     .substr(0, 5);
   console.log(client.id);
 
-  client.on("create-game", (name) => {
-    const Player1Piece = Math.random() > 0.5 ? "X" : "O";
-    const Player2Piece = Player1Piece === "X" ? "O" : "X";
+  client.on('create-game', (name) => {
+    const Player1Piece = Math.random() > 0.5 ? 'X' : 'O';
+    const Player2Piece = Player1Piece === 'X' ? 'O' : 'X';
 
     roomid.push({
       RoomId: room_id,
@@ -52,9 +52,9 @@ io.on("connection", (client) => {
     });
   });
 
-  client.emit("create-game", room_id);
+  client.emit('create-game', room_id);
 
-  client.on("join-game", (id, name) => {
+  client.on('join-game', (id, name) => {
     console.log(id);
     client.join(id);
     let valid = null;
@@ -65,21 +65,16 @@ io.on("connection", (client) => {
         room.Player2 = name;
         valid = true;
         Room = room;
-        client.emit("validate", valid, Room);
-        client.to(Room.RoomId).emit("testvalue", Room);
+        client.emit('validate', valid, Room);
+        client.to(Room.RoomId).emit('testvalue', Room);
       } else {
         valid = false;
       }
     });
     console.log(roomid);
-    // if (roomid.includes(id)) {
-    //     valid = true
-    // } else {
-    //     valid = false
-    // }
   });
 
-  client.on("onDivClick", (number, details, piece) => {
+  client.on('onDivClick', (number, details, piece) => {
     console.log(number, details.RoomId, piece);
     if (details.Player1Piece === piece) {
       details.player1Array.push(number - 1);
@@ -90,61 +85,61 @@ io.on("connection", (client) => {
     let p2 = checkWinner(details.player2Array);
     console.log(p1, p2, details.player1Array, details.player2Array);
     if (p1) {
-      console.log("Player 1 Winner");
+      console.log('Player 1 Winner');
       details.Player1Score++;
       io.in(details.RoomId).emit(
-        "scoreUpdate",
+        'scoreUpdate',
         details.Player1Score,
         details.Player2Score
       );
-      client.to(details.RoomId).emit("draw", number, piece, details);
-      io.in(details.RoomId).emit("result", details.Player1);
+      client.to(details.RoomId).emit('draw', number, piece, details);
+      io.in(details.RoomId).emit('result', details.Player1);
     } else if (p2) {
-      console.log("Player 2 Winner");
+      console.log('Player 2 Winner');
       details.Player2Score++;
       io.in(details.RoomId).emit(
-        "scoreUpdate",
+        'scoreUpdate',
         details.Player1Score,
         details.Player2Score
       );
-      client.to(details.RoomId).emit("draw", number, piece, details);
-      io.in(details.RoomId).emit("result", details.Player2);
+      client.to(details.RoomId).emit('draw', number, piece, details);
+      io.in(details.RoomId).emit('result', details.Player2);
     } else if (
       details.player1Array.length + details.player2Array.length ===
       9
     ) {
-      client.to(details.RoomId).emit("draw", number, piece, details);
-      io.in(details.RoomId).emit("result", "Draw");
+      client.to(details.RoomId).emit('draw', number, piece, details);
+      io.in(details.RoomId).emit('result', 'Draw');
     } else {
-      client.to(details.RoomId).emit("draw", number, piece, details);
+      client.to(details.RoomId).emit('draw', number, piece, details);
     }
   });
 
-  client.on("testvalue", (testvalue, room) => {
+  client.on('testvalue', (testvalue, room) => {
     console.log(testvalue);
     console.log(room);
-    client.to(room).emit("testvalue", testvalue);
+    client.to(room).emit('testvalue', testvalue);
   });
 
-  client.on("playAgain", (details) => {
+  client.on('playAgain', (details) => {
     // const Player1Piece = Math.random() > 0.5 ? "X" : "O";
     // const Player2Piece = Player1Piece === "X" ? "O" : "X";
 
     // details.Player1Piece = Player1Piece;
     // details.Player2Piece = Player2Piece;
 
-    client.to(details.RoomId).emit("playAgain");
+    client.to(details.RoomId).emit('playAgain');
   });
 
-  client.on("disconnecting1", (id) => {
-    console.log("disconnected");
+  client.on('leave', (id) => {
+    console.log('disconnected', id);
     roomid.forEach((room, index) => {
       if (room.RoomId === id) {
-        console.log("Delete Room");
-        delete roomid[index];
-      } else {
-        console.log(id);
+        if (index > -1) {
+          roomid.splice(index, 1);
+        }
       }
     });
+    client.to(id).emit('testvalue', 'Other Player has disconnected!');
   });
 });
